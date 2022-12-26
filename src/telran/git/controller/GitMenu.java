@@ -9,12 +9,15 @@ public class GitMenu {
 
 	public static Item[] getGitRepositoryItems(GitRepository gitRepository) {
 		GitMenu.gitRepository = gitRepository;
-		Item[] itemsRes = { Item.of("commit", GitMenu::commitMethod), Item.of("info", GitMenu::infoMethod),
+		Item[] itemsRes = { Item.of("commit", GitMenu::commitMethod), 
+				Item.of("info", GitMenu::infoMethod),
 				Item.of("create branch", GitMenu::createBranchMethod),
 				Item.of("rename branch", GitMenu::renameBranchMethod),
-				Item.of("delete branch", GitMenu::deleteBranchMethod), Item.of("log", GitMenu::logMethod),
+				Item.of("delete branch", GitMenu::deleteBranchMethod), 
+				Item.of("log", GitMenu::logMethod),
 				Item.of("branches list", GitMenu::branchesMethod),
-				Item.of("commit content", GitMenu::commitContentMethod), Item.of("switch to", GitMenu::switchToMethod),
+				Item.of("commit content", GitMenu::commitContentMethod), 
+				Item.of("switch to", GitMenu::switchToMethod),
 				Item.of("add ignore regex", GitMenu::addRegexMethod),
 				Item.of("exit", io -> gitRepository.save(), true) };
 		return itemsRes;
@@ -26,7 +29,7 @@ public class GitMenu {
 	}
 
 	static void addRegexMethod(InputOutput io) {
-		String commitMessage = io.readPredicate("Enter regular expression", "Wrong regular expression", e -> {
+		String regex = io.readPredicate("Enter regular expression", "Wrong regular expression", e -> {
 			boolean res = true;
 			try {
 				"test".matches(e);
@@ -35,7 +38,7 @@ public class GitMenu {
 			}
 			return res;
 		});
-		io.writeLine(gitRepository.commit(commitMessage));
+		io.writeLine(gitRepository.addIgnoredFileNameExp(regex));
 	}
 
 	static void commitContentMethod(InputOutput io) {

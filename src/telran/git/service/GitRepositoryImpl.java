@@ -37,6 +37,7 @@ public class GitRepositoryImpl implements GitRepository {
 	public static final String WRONG_COMMIT_NAME = "no commit with the name ";
 	public static final String SAME_AS_CURRENT = "The same commit as the current one";
 	public static final String DIRECTORY_NO_COMMITTED = "Run commit before switching";
+	private static final String NOTHING_COMMIT = " nothing to commit";
 	private Instant lastCommitTimestamp;
 
 	private GitRepositoryImpl(Path git) {
@@ -69,6 +70,10 @@ public class GitRepositoryImpl implements GitRepository {
 
 	@Override
 	public String commit(String commitMessage) {
+		List<FileState> states = info();
+		if (states.isEmpty() || states.stream().allMatch(fs -> fs.status == Status.COMMITTED)) {
+			return NOTHING_COMMIT;
+		}
 		return head == null ? commitHeadNull(commitMessage) : commitHeadNoNull(commitMessage);
 	}
 
@@ -224,7 +229,7 @@ public class GitRepositoryImpl implements GitRepository {
 				branches.remove(branchName);
 				branches.put(newName, branch);
 				if (head.equals(branchName)) {
-					head = branchName;
+					head = newName;
 				}
 				res = BRANCH_RENAMED;
 			}
@@ -309,7 +314,7 @@ public class GitRepositoryImpl implements GitRepository {
 						throw new IllegalStateException("error in deleting files " + e.getMessage());
 					}
 				});
-				switchProcess(commitHead, commitTo);
+				switchProcess(commitTo);
 				head = name;
 				lastCommitTimestamp = Instant.now();
 			}
@@ -329,11 +334,11 @@ public class GitRepositoryImpl implements GitRepository {
 
 	}
 
-	private void switchProcess(Commit commitHead, Commit commitTo) {
+	private void switchProcess(Commit commitTo) {
 		// With assumption files are not removed from working directory
 		Set<String> restoredFiles = new HashSet<>();
 		try {
-			while (commitTo != null && !commitTo.commitName.equals(commitHead.commitName)) {
+			while (commitTo != null) {
 				commitTo.commitFiles.stream().forEach(cf -> {
 					if (!restoredFiles.contains(cf.path)) {
 						writeFile(cf);
